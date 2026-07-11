@@ -2,7 +2,7 @@ import AirCanvas from './components/AirCanvas.jsx';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-50">
+    <div className="min-h-screen bg-[#16171d] text-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold">Air Canvas</h1>

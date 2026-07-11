@@ -195,7 +195,7 @@ const AirCanvas = () => {
     out.width = draw.width;
     out.height = draw.height;
     const ctx = out.getContext('2d');
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#16171d';
     ctx.fillRect(0, 0, out.width, out.height);
     // The preview is mirrored for the front camera; flip the export the same
     // way so saved drawings read the way the artist saw them.
@@ -212,14 +212,14 @@ const AirCanvas = () => {
 
   if (status === 'error') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-gray-800">
+      <div className="text-center p-8 rounded-2xl bg-[#1f2028]">
         Could not load the hand-tracking model. Check your connection and refresh.
       </div>
     );
   }
   if (status === 'no-camera') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-gray-800">
+      <div className="text-center p-8 rounded-2xl bg-[#1f2028]">
         Camera unavailable or permission denied. Air Canvas needs a camera -
         allow access and refresh the page.
       </div>
@@ -229,7 +229,7 @@ const AirCanvas = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Toolbar */}
-      <div className="w-full max-w-2xl mb-3 flex flex-wrap items-center justify-center gap-2 p-3 rounded-2xl bg-gray-800">
+      <div className="w-full max-w-2xl mb-3 flex flex-wrap items-center justify-center gap-2 p-3 rounded-2xl bg-[#1f2028]">
         {COLORS.map((c) => (
           <button
             key={c}
@@ -249,29 +249,29 @@ const AirCanvas = () => {
           type="button"
           onClick={() => setEraser((e) => !e)}
           className={`px-3 h-8 rounded-full font-mono text-sm ${
-            eraser ? 'bg-white text-black' : 'bg-gray-700'
+            eraser ? 'bg-white text-black' : 'bg-[#2e303a]'
           }`}
         >
           Eraser
         </button>
-        <span className="w-px h-6 bg-gray-600 mx-1" />
+        <span className="w-px h-6 bg-[#3a3d49] mx-1" />
         {Object.keys(BRUSHES).map((b) => (
           <button
             key={b}
             type="button"
             onClick={() => setBrush(b)}
             className={`w-8 h-8 rounded-full font-mono text-sm font-bold ${
-              brush === b ? 'bg-yellow-400 text-black' : 'bg-gray-700'
+              brush === b ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-[#2e303a]'
             }`}
           >
             {b}
           </button>
         ))}
-        <span className="w-px h-6 bg-gray-600 mx-1" />
-        <button type="button" onClick={clearCanvas} className="px-3 h-8 rounded-full font-mono text-sm bg-gray-700 hover:bg-gray-600">
+        <span className="w-px h-6 bg-[#3a3d49] mx-1" />
+        <button type="button" onClick={clearCanvas} className="px-3 h-8 rounded-full font-mono text-sm bg-[#2e303a] hover:bg-[#3a3d49]">
           Clear
         </button>
-        <button type="button" onClick={savePng} className="px-3 h-8 rounded-full font-mono text-sm font-bold bg-yellow-400 text-black hover:bg-yellow-300">
+        <button type="button" onClick={savePng} className="px-3 h-8 rounded-full font-mono text-sm font-bold text-red-400 bg-red-500/15 border border-red-500/40 hover:bg-red-500/25">
           Save PNG
         </button>
       </div>
