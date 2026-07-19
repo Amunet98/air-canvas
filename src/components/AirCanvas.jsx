@@ -212,14 +212,14 @@ const AirCanvas = () => {
 
   if (status === 'error') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-[#1f2028]">
+      <div className="text-center p-8 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
         Could not load the hand-tracking model. Check your connection and refresh.
       </div>
     );
   }
   if (status === 'no-camera') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-[#1f2028]">
+      <div className="text-center p-8 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
         Camera unavailable or permission denied. Air Canvas needs a camera -
         allow access and refresh the page.
       </div>
@@ -229,67 +229,77 @@ const AirCanvas = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Toolbar */}
-      <div className="w-full max-w-2xl mb-3 flex flex-wrap items-center justify-center gap-2 p-3 rounded-2xl bg-[#1f2028]">
-        {COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            aria-label={`Color ${c}`}
-            onClick={() => {
-              setColor(c);
-              setEraser(false);
-            }}
-            className={`w-8 h-8 rounded-full border-2 transition-transform ${
-              color === c && !eraser ? 'border-white scale-110' : 'border-transparent'
-            }`}
-            style={{ backgroundColor: c }}
-          />
-        ))}
+      <div className="w-full max-w-2xl mb-3 flex flex-wrap items-center justify-center gap-2 p-3 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
+        {COLORS.map((c) => {
+          const isWhiteDot = c.toLowerCase() === '#f9fafb';
+          const selected = color === c && !eraser;
+          return (
+            <button
+              key={c}
+              type="button"
+              aria-label={`Color ${c}`}
+              onClick={() => {
+                setColor(c);
+                setEraser(false);
+              }}
+              className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                selected
+                  ? 'border-gray-900 dark:border-white scale-110'
+                  : isWhiteDot
+                    ? 'border-gray-300 dark:border-transparent'
+                    : 'border-transparent'
+              }`}
+              style={{ backgroundColor: c }}
+            />
+          );
+        })}
         <button
           type="button"
           onClick={() => setEraser((e) => !e)}
           className={`px-3 h-8 rounded-full font-mono text-sm ${
-            eraser ? 'bg-white text-black' : 'bg-[#2e303a]'
+            eraser ? 'bg-white text-black border border-[#e4ddd2]' : 'bg-gray-200 dark:bg-[#2e303a]'
           }`}
         >
           Eraser
         </button>
-        <span className="w-px h-6 bg-[#3a3d49] mx-1" />
+        <span className="w-px h-6 bg-gray-300 dark:bg-[#3a3d49] mx-1" />
         {Object.keys(BRUSHES).map((b) => (
           <button
             key={b}
             type="button"
             onClick={() => setBrush(b)}
             className={`w-8 h-8 rounded-full font-mono text-sm font-bold ${
-              brush === b ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-[#2e303a]'
+              brush === b
+                ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/50'
+                : 'bg-gray-200 dark:bg-[#2e303a]'
             }`}
           >
             {b}
           </button>
         ))}
-        <span className="w-px h-6 bg-[#3a3d49] mx-1" />
-        <button type="button" onClick={clearCanvas} className="px-3 h-8 rounded-full font-mono text-sm bg-[#2e303a] hover:bg-[#3a3d49]">
+        <span className="w-px h-6 bg-gray-300 dark:bg-[#3a3d49] mx-1" />
+        <button type="button" onClick={clearCanvas} className="px-3 h-8 rounded-full font-mono text-sm bg-gray-200 hover:bg-gray-300 dark:bg-[#2e303a] dark:hover:bg-[#3a3d49]">
           Clear
         </button>
-        <button type="button" onClick={savePng} className="px-3 h-8 rounded-full font-mono text-sm font-bold text-red-400 bg-red-500/15 border border-red-500/40 hover:bg-red-500/25">
+        <button type="button" onClick={savePng} className="px-3 h-8 rounded-full font-mono text-sm font-bold text-red-600 dark:text-red-400 bg-red-500/15 border border-red-500/40 hover:bg-red-500/25">
           Save PNG
         </button>
       </div>
 
       {/* Mirrored container so strokes track your hand like a mirror;
           the PNG export un-flips so the result reads correctly. */}
-      <div className={`relative w-full max-w-2xl ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}>
+      <div className={`relative w-full max-w-2xl rounded-2xl bg-[#0b0c10] ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}>
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="rounded-2xl w-full block aspect-[4/3] object-cover bg-black/40 opacity-80"
+          className="rounded-2xl w-full block aspect-[4/3] object-cover opacity-80"
         />
         <canvas ref={drawRef} className="absolute inset-0 w-full h-full pointer-events-none" />
         <canvas ref={overlayRef} className="absolute inset-0 w-full h-full pointer-events-none" />
         {status === 'loading' && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/60 font-mono text-sm scale-x-[-1]">
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/60 text-gray-100 font-mono text-sm scale-x-[-1]">
             Loading hand-tracking model&hellip;
           </div>
         )}
