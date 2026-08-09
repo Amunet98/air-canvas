@@ -1,2 +1,64 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens.
+ *
+ * Same shape as lekh's token block so the two apps stay recognisably part of
+ * one family. Values are the hex literals that were previously repeated inline
+ * throughout the JSX - this was a refactor, not a recolour, so the rendered
+ * result is unchanged.
+ *
+ * Raw tokens are deliberately named without the `--color-` prefix: `@theme
+ * inline` below maps them onto Tailwind's namespace, and reusing the same name
+ * on both sides would make the mapping self-referential.
+ *
+ * Dark values live on `.dark` rather than in a media query because the theme
+ * is an explicit user choice persisted to localStorage (see ThemeToggle), not
+ * a system preference. */
+:root {
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --line: #e4ddd2;
+  --muted: #e5e7eb;
+  --muted-hover: #d1d5db;
+  --rule: #d1d5db;
+  /* Matches lekh's light accent. #dc2626 (the old red-600) only reached
+   * 3.81:1 against the accent/15 button tint - under the 4.5:1 AA floor
+   * for normal text. This clears it at 4.98:1. */
+  --accent: #b8202f;
+  --canvas: #0b0c10;
+}
+
+.dark {
+  --bg: #16171d;
+  --surface: #1f2028;
+  /* Dark surfaces separate by tone rather than by a border line. */
+  --line: transparent;
+  --muted: #2e303a;
+  --muted-hover: #3a3d49;
+  --rule: #3a3d49;
+  /* Deliberately NOT lekh's #e4576b: on this darker surface it drops to
+   * 3.79:1 against the same tint, where #f87171 holds 4.67:1. */
+  --accent: #f87171;
+}
+
+/* Expose the tokens as Tailwind utilities (bg-surface, border-line, ...). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-muted-hover: var(--muted-hover);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-canvas: var(--canvas);
+}
+
+/* Every control shares one focus ring. There was no visible focus state at all
+ * before this, which made the app unusable by keyboard. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}

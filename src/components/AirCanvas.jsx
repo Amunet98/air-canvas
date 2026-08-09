@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import { Download, Eraser, SwitchCamera, Trash2 } from 'lucide-react';
 
 const COLORS = ['#facc15', '#f87171', '#4ade80', '#60a5fa', '#f9fafb'];
 const BRUSHES = { S: 4, M: 8, L: 16 };
@@ -195,6 +196,8 @@ const AirCanvas = () => {
     out.width = draw.width;
     out.height = draw.height;
     const ctx = out.getContext('2d');
+    // Fixed dark ground for the export regardless of the UI theme: the
+    // brush palette is bright and only reads against a dark backdrop.
     ctx.fillStyle = '#16171d';
     ctx.fillRect(0, 0, out.width, out.height);
     // The preview is mirrored for the front camera; flip the export the same
@@ -212,14 +215,14 @@ const AirCanvas = () => {
 
   if (status === 'error') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
+      <div className="text-center p-8 rounded-2xl bg-surface border border-line">
         Could not load the hand-tracking model. Check your connection and refresh.
       </div>
     );
   }
   if (status === 'no-camera') {
     return (
-      <div className="text-center p-8 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
+      <div className="text-center p-8 rounded-2xl bg-surface border border-line">
         Camera unavailable or permission denied. Air Canvas needs a camera -
         allow access and refresh the page.
       </div>
@@ -228,67 +231,105 @@ const AirCanvas = () => {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Toolbar */}
-      <div className="w-full max-w-2xl mb-3 flex flex-wrap items-center justify-center gap-2 p-3 rounded-2xl bg-white border border-[#e4ddd2] dark:bg-[#1f2028] dark:border-transparent">
-        {COLORS.map((c) => {
-          const isWhiteDot = c.toLowerCase() === '#f9fafb';
-          const selected = color === c && !eraser;
-          return (
-            <button
-              key={c}
-              type="button"
-              aria-label={`Color ${c}`}
-              onClick={() => {
-                setColor(c);
-                setEraser(false);
-              }}
-              className={`w-8 h-8 rounded-full border-2 transition-transform ${
-                selected
-                  ? 'border-gray-900 dark:border-white scale-110'
-                  : isWhiteDot
-                    ? 'border-gray-300 dark:border-transparent'
-                    : 'border-transparent'
-              }`}
-              style={{ backgroundColor: c }}
-            />
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => setEraser((e) => !e)}
-          className={`px-3 h-8 rounded-full font-mono text-sm ${
-            eraser ? 'bg-white text-black border border-[#e4ddd2]' : 'bg-gray-200 dark:bg-[#2e303a]'
-          }`}
-        >
-          Eraser
-        </button>
-        <span className="w-px h-6 bg-gray-300 dark:bg-[#3a3d49] mx-1" />
-        {Object.keys(BRUSHES).map((b) => (
+      {/* Toolbar.
+       *
+       * Eleven controls in one wrapped row collapsed into an unreadable block
+       * on a phone, so they are grouped instead: the groups stack vertically
+       * below sm and sit on one row above it. Each group is a labelled
+       * role="group" so a screen reader announces what the buttons belong to.
+       *
+       * Every control has a >=44px hit area (the guideline touch minimum) even
+       * where the visible swatch is smaller - the button is the target, the
+       * inner span is only the paint. */}
+      <div className="w-full max-w-2xl mb-3 p-3 rounded-2xl bg-surface border border-line flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2">
+        <div role="group" aria-label="Colour" className="flex items-center justify-center gap-1">
+          {COLORS.map((c) => {
+            const isWhiteDot = c.toLowerCase() === '#f9fafb';
+            const selected = color === c && !eraser;
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Colour ${c}`}
+                aria-pressed={selected}
+                onClick={() => {
+                  setColor(c);
+                  setEraser(false);
+                }}
+                className="grid place-items-center w-11 h-11 shrink-0 rounded-full cursor-pointer"
+              >
+                <span
+                  className={`block w-7 h-7 rounded-full border-2 transition-transform motion-reduce:transition-none ${
+                    selected
+                      ? 'border-gray-900 dark:border-white scale-110'
+                      : isWhiteDot
+                        ? 'border-gray-300 dark:border-transparent'
+                        : 'border-transparent'
+                  }`}
+                  style={{ backgroundColor: c }}
+                />
+              </button>
+            );
+          })}
           <button
-            key={b}
             type="button"
-            onClick={() => setBrush(b)}
-            className={`w-8 h-8 rounded-full font-mono text-sm font-bold ${
-              brush === b
-                ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/50'
-                : 'bg-gray-200 dark:bg-[#2e303a]'
+            aria-pressed={eraser}
+            onClick={() => setEraser((e) => !e)}
+            className={`inline-flex items-center gap-1.5 px-3 h-11 rounded-full font-mono text-sm cursor-pointer transition-colors motion-reduce:transition-none ${
+              eraser
+                ? 'bg-bg text-gray-900 dark:text-gray-50 border border-line'
+                : 'bg-muted hover:bg-muted-hover'
             }`}
           >
-            {b}
+            <Eraser size={16} aria-hidden />
+            Eraser
           </button>
-        ))}
-        <span className="w-px h-6 bg-gray-300 dark:bg-[#3a3d49] mx-1" />
-        <button type="button" onClick={clearCanvas} className="px-3 h-8 rounded-full font-mono text-sm bg-gray-200 hover:bg-gray-300 dark:bg-[#2e303a] dark:hover:bg-[#3a3d49]">
-          Clear
-        </button>
-        <button type="button" onClick={savePng} className="px-3 h-8 rounded-full font-mono text-sm font-bold text-red-600 dark:text-red-400 bg-red-500/15 border border-red-500/40 hover:bg-red-500/25">
-          Save PNG
-        </button>
+        </div>
+
+
+        <div role="group" aria-label="Brush size" className="flex items-center justify-center gap-1 sm:border-l sm:border-rule sm:pl-2">
+          {Object.keys(BRUSHES).map((b) => (
+            <button
+              key={b}
+              type="button"
+              aria-pressed={brush === b}
+              aria-label={`Brush size ${b}`}
+              onClick={() => setBrush(b)}
+              className={`w-11 h-11 shrink-0 rounded-full font-mono text-sm font-bold cursor-pointer transition-colors motion-reduce:transition-none ${
+                brush === b
+                  ? 'bg-accent/20 text-accent border border-accent/50'
+                  : 'bg-muted hover:bg-muted-hover'
+              }`}
+            >
+              {b}
+            </button>
+          ))}
+        </div>
+
+
+        <div className="flex items-center justify-center gap-2 sm:border-l sm:border-rule sm:pl-2">
+          <button
+            type="button"
+            onClick={clearCanvas}
+            className="inline-flex items-center gap-1.5 px-3 h-11 rounded-full font-mono text-sm bg-muted hover:bg-muted-hover cursor-pointer transition-colors motion-reduce:transition-none"
+          >
+            <Trash2 size={16} aria-hidden />
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={savePng}
+            className="inline-flex items-center gap-1.5 px-3 h-11 rounded-full font-mono text-sm font-bold text-accent bg-accent/15 border border-accent/40 hover:bg-accent/25 cursor-pointer transition-colors motion-reduce:transition-none"
+          >
+            <Download size={16} aria-hidden />
+            Save PNG
+          </button>
+        </div>
       </div>
 
       {/* Mirrored container so strokes track your hand like a mirror;
           the PNG export un-flips so the result reads correctly. */}
-      <div className={`relative w-full max-w-2xl rounded-2xl bg-[#0b0c10] ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}>
+      <div className={`relative w-full max-w-2xl rounded-2xl bg-canvas ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}>
         <video
           ref={videoRef}
           autoPlay
@@ -307,11 +348,11 @@ const AirCanvas = () => {
           <button
             type="button"
             onClick={() => setFacingMode((m) => (m === 'user' ? 'environment' : 'user'))}
-            className="absolute bottom-3 right-3 p-2 rounded-full bg-black/50 text-white text-xl leading-none backdrop-blur-sm"
+            className="absolute bottom-3 right-3 grid place-items-center w-11 h-11 rounded-full bg-black/50 text-white backdrop-blur-sm cursor-pointer"
             aria-label="Switch camera"
             title="Switch camera"
           >
-            {'🔄'}
+            <SwitchCamera size={20} aria-hidden />
           </button>
         )}
       </div>
