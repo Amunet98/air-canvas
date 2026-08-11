@@ -27,9 +27,29 @@ deployed demo has no runtime CDN dependency. Front/back camera switching
 works on phones; the front-camera view is mirrored like a real mirror so
 drawing feels natural.
 
+## Interface
+
+**Light and dark themes**, dark by default, with a light "paper" theme —
+class-based Tailwind variant, persisted to `localStorage` and applied by a
+pre-paint script so the theme never flashes on load. The drawing surface
+stays dark in both, and the white pen swatch gains a border so it remains
+visible on the light toolbar.
+
+The palette lives as a `:root`/`.dark` token block in `index.css`, mapped
+onto Tailwind utilities via `@theme inline` — the same shape used by
+[lekh](https://github.com/Amunet98/lekh) and
+[gesture-recognition](https://github.com/Amunet98/gesture-recognition), so
+the demos read as one family. Icons are `lucide-react` rather than emoji,
+which render differently on every platform.
+
+Every control has a real **keyboard and touch baseline**: visible
+`focus-visible` rings, `role="group"` and `aria-label` on the colour and
+brush-size clusters so screen readers announce what the buttons belong to,
+touch targets sized for a thumb, and `prefers-reduced-motion` honoured.
+
 ## Stack
 
-React 19 · Vite · Tailwind CSS v4 · @mediapipe/tasks-vision
+React 19 · Vite · Tailwind CSS v4 · @mediapipe/tasks-vision · lucide-react
 
 ## Run locally
 
