@@ -23,9 +23,17 @@ your device.
    (exported un-mirrored so your writing reads correctly).
 
 The WASM runtime and `.task` model are self-hosted in `public/`, so the
-deployed demo has no runtime CDN dependency. Front/back camera switching
-works on phones; the front-camera view is mirrored like a real mirror so
-drawing feels natural.
+deployed demo has no runtime CDN dependency. Both are requested from the site
+root rather than relative to the current path — as relative paths they only
+resolved when the app was served from the domain root. Front/back camera
+switching works on phones; the front-camera view is mirrored like a real
+mirror so drawing feels natural.
+
+The model is loaded with the **GPU delegate first and CPU as a fallback**. With
+GPU alone, a machine whose delegate is unavailable — software rendering, a
+locked-down driver, a browser without WebGL — failed setup outright and was
+told to check its network connection, which was neither true nor actionable.
+CPU is slower and perfectly usable for a single hand.
 
 ## Interface
 
