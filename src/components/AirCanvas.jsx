@@ -1,8 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { Download, Eraser, SwitchCamera, Trash2 } from 'lucide-react';
 
 const COLORS = ['#facc15', '#f87171', '#4ade80', '#60a5fa', '#f9fafb'];
+// Screen readers spell a hex code out character by character, so `Colour
+// ${c}` announced the yellow swatch as "Colour number f a c c one five".
+// Names are what the button is actually offering.
+const COLOR_NAMES = {
+  '#facc15': 'Yellow',
+  '#f87171': 'Red',
+  '#4ade80': 'Green',
+  '#60a5fa': 'Blue',
+  '#f9fafb': 'White',
+};
 const BRUSHES = { S: 4, M: 8, L: 16 };
 // Landmark indices: tips and the joint below them (pip) per finger.
 const FINGERS = {
@@ -34,28 +44,65 @@ const AirCanvas = () => {
   const [brush, setBrush] = useState('M');
   const [eraser, setEraser] = useState(false);
   const [mode, setMode] = useState('idle'); // idle | draw | hover
+  // The rAF loop runs ~60x/s and used to call setMode on every single frame
+  // for a value that changes a handful of times in a session. React bails out
+  // of an identical value so it was cheap rather than broken, but it still
+  // meant a state update per frame competing with the drawing work. The ref
+  // holds the last value written so the loop can skip the call entirely.
+  const modeRef = useRef('idle');
+  const setModeIfChanged = useCallback((next) => {
+    if (modeRef.current === next) return;
+    modeRef.current = next;
+    setMode(next);
+  }, []);
 
-  toolRef.current = { color, size: BRUSHES[brush], eraser };
+  // Mirrored in an effect, not during render. Writing a ref while rendering is
+  // a side effect in the render phase: under StrictMode's double-invoke, and
+  // under any future concurrent re-render that React throws away, the write
+  // still lands even though that render never commits.
+  useEffect(() => {
+    toolRef.current = { color, size: BRUSHES[brush], eraser };
+  }, [color, brush, eraser]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const fileset = await FilesetResolver.forVisionTasks('wasm');
-        const landmarker = await HandLandmarker.createFromOptions(fileset, {
-          baseOptions: { modelAssetPath: 'models/hand_landmarker.task', delegate: 'GPU' },
-          runningMode: 'VIDEO',
-          numHands: 1,
-        });
-        if (cancelled) {
-          landmarker.close();
-          return;
-        }
-        landmarkerRef.current = landmarker;
-        setStatus((s) => (s === 'loading' ? 'ready' : s));
-      } catch {
-        if (!cancelled) setStatus('error');
+      // Root-relative. These were 'wasm' and 'models/…', resolved against the
+      // *current* path, so the app only ever worked when served from the
+      // domain root — one level deep and the model 404s.
+      const fileset = await FilesetResolver.forVisionTasks('/wasm').catch(() => null);
+      if (cancelled) return;
+      if (!fileset) {
+        setStatus('error');
+        return;
       }
+
+      // GPU first, CPU second. There was no second: a machine whose GPU
+      // delegate is unavailable (software rendering, a locked-down driver, a
+      // browser without WebGL) threw here and got told to "check your
+      // connection and refresh", which is a lie — the network was fine and
+      // refreshing changes nothing. CPU is slower and still perfectly usable
+      // for one hand.
+      for (const delegate of ['GPU', 'CPU']) {
+        try {
+          const landmarker = await HandLandmarker.createFromOptions(fileset, {
+            baseOptions: { modelAssetPath: '/models/hand_landmarker.task', delegate },
+            runningMode: 'VIDEO',
+            numHands: 1,
+          });
+          if (cancelled) {
+            landmarker.close();
+            return;
+          }
+          landmarkerRef.current = landmarker;
+          setStatus((s) => (s === 'loading' ? 'ready' : s));
+          return;
+        } catch {
+          if (cancelled) return;
+          // Fall through to the next delegate; only the last failure is fatal.
+        }
+      }
+      setStatus('error');
     })();
     return () => {
       cancelled = true;
@@ -135,7 +182,7 @@ const AirCanvas = () => {
       if (!lm) {
         pen.prev = null;
         pen.smooth = null;
-        setMode('idle');
+        setModeIfChanged('idle');
         return;
       }
 
@@ -166,7 +213,7 @@ const AirCanvas = () => {
         dctx.stroke();
       }
       pen.prev = drawing ? { ...pt } : null;
-      setMode(drawing ? 'draw' : hovering ? 'hover' : 'idle');
+      setModeIfChanged(drawing ? 'draw' : hovering ? 'hover' : 'idle');
 
       // Cursor: filled dot while drawing, ring while hovering.
       octx.beginPath();
@@ -250,7 +297,7 @@ const AirCanvas = () => {
               <button
                 key={c}
                 type="button"
-                aria-label={`Colour ${c}`}
+                aria-label={COLOR_NAMES[c] ?? `Colour ${c}`}
                 aria-pressed={selected}
                 onClick={() => {
                   setColor(c);
