@@ -263,7 +263,9 @@ const AirCanvas = () => {
   if (status === 'error') {
     return (
       <div className="text-center p-8 rounded-2xl bg-surface border border-line">
-        Could not load the hand-tracking model. Check your connection and refresh.
+        Could not load the hand-tracking model. This browser may not support the
+        WebAssembly runtime it needs — try a different one, or check your
+        connection and refresh.
       </div>
     );
   }
