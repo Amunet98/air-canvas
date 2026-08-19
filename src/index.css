@@ -61,4 +61,12 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
+
+  /* Mobile browsers paint their own translucent gray/black overlay on tap
+     unless told otherwise, which muddies every button's press state
+     regardless of its actual accent color. Real feedback comes from each
+     component's own hover/active states. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
